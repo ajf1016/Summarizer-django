@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+*.cache
+*.log
+
+# Environment variables
+.env
+
+# Static files
+/static/
+
+# Media files
+/media/
+
+# Virtual environment
+/venv/
+*.venv/
+
+# Database
+*.sqlite3
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
