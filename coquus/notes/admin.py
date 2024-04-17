@@ -1,3 +1,10 @@
 from django.contrib import admin
+from notes.models import VoiceNote
 
-# Register your models here.
+
+class VoiceNoteAdmin(admin.ModelAdmin):
+    list_display = ['name', 'voice_data']
+    model = VoiceNote
+
+
+admin.site.register(VoiceNote, VoiceNoteAdmin)
