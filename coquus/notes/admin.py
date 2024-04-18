@@ -1,10 +1,21 @@
 from django.contrib import admin
-from notes.models import VoiceNote
+from notes.models import Note, Audio
 
 
-class VoiceNoteAdmin(admin.ModelAdmin):
-    list_display = ['name', 'voice_data']
-    model = VoiceNote
+class NoteAdmin(admin.ModelAdmin):
+    list_display = ['get_audio_name', 'summary', 'created_at']
+
+    def get_audio_name(self, obj):
+        return obj.audio.name
+    get_audio_name.short_description = 'Audio Name'
 
 
-admin.site.register(VoiceNote, VoiceNoteAdmin)
+admin.site.register(Note, NoteAdmin)
+
+
+class AudioAdmin(admin.ModelAdmin):
+    list_display = ['name', 'audio_file', 'uploaded_at']
+    model = Audio
+
+
+admin.site.register(Audio, AudioAdmin)
