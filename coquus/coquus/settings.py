@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv()
 
+# ESP FILE PATH : coquus_audio_files/
 # .env variables
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG') == 'True'
@@ -14,10 +15,7 @@ DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+DEFAULT_CHARSET = 'utf-8'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -37,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'channels',
 
     'notes',
 ]
@@ -130,3 +129,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
+#     },
+# }

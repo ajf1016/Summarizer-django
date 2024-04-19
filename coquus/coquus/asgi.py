@@ -1,16 +1,17 @@
-"""
-ASGI config for coquus project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
-"""
-
 import os
-
 from django.core.asgi import get_asgi_application
+from coquus.routing import application
+
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'coquus.settings')
 
-application = get_asgi_application()
+django_application = get_asgi_application()
+
+
+def application(scope):
+    if scope['type'] == 'http':
+        # If the connection is HTTP, use Django's ASGI application
+        return django_application
+    elif scope['type'] == 'websocket':
+        # If the connection is WebSocket, use the routing configuration
+        return application(scope)
