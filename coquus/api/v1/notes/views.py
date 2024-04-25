@@ -12,6 +12,7 @@ from django.conf import settings
 from dotenv import load_dotenv
 import asyncio
 import numpy as np
+import librosa
 load_dotenv()
 
 # ESP FILE PATH : coquus_audio_files/
@@ -175,20 +176,16 @@ def audio_to_text(request, pk):
         audio_response = FileResponse(audio_file, content_type='audio/mpeg')
         audio_response['Content-Disposition'] = f'attachment; filename="{
             audio_file.name}"'
+
+        async def get_text():
+            return await audioToText(audio_file.path)
+        text = loop.run_until_complete(get_text())
         response_data = {
             'status_code': 6000,
             'message': 'Audio converted to text',
-            'data': audio_file,
+            'data': text,
         }
-
-        async def get_text():
-            return await audioToText(audio_response)
-        text = loop.run_until_complete(get_text())
-        # return Response(response_data)
-        return text
-        # return audio_response
-        # return Response(audio_file.name)
-        # return FileResponse(audio_file, content_type='audio/mpeg')
+        return Response(response_data)
     response_data = {
         'status_code': 6001,
         'message': 'Audio not found',
@@ -196,9 +193,8 @@ def audio_to_text(request, pk):
     return JsonResponse(response_data)
 
 
-# whisper function and gemini
 async def audioToText(audio_file):
-    await asyncio.sleep(5)
+    # await asyncio.sleep(2)
     print("AUdio TEXT 1", type(audio_file))
     model = whisper.load_model("base")
 
