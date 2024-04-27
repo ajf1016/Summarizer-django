@@ -194,19 +194,26 @@ def audio_to_text(request, pk):
 
 
 async def audioToText(audio_file):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     # await asyncio.sleep(2)
     print("AUdio TEXT 1", type(audio_file))
     model = whisper.load_model("base")
 
     print("AUdio TEXT 2", audio_file)
-    text = model.transcribe(audio_file)
+    r_text = model.transcribe(audio_file, language="tibetan")
+    s_text = await summarize(r_text)
     print("AUdio TEXT 3")
-    return text["text"]
+    return {
+        "r_text": r_text["text"],
+        "s_text": s_text
+    }
 
 
-def summarize(text):
+async def summarize(text):
+    await asyncio.sleep(5)
     model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content("Summarize this text" + text)
+    response = model.generate_content("Summarize this text" + text["text"])
 
     return response
 
