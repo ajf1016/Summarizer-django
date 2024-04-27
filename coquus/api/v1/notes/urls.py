@@ -7,4 +7,6 @@ urlpatterns = [
     path('get-single-voice/<int:pk>/', views.view_single_voice),
     path('get-single-note/<int:pk>/', views.view_single_note),
     path('upload-audio/', views.upload_audio),
+    path('convert-audio-to-text-and-summarize/<int:pk>',
+         views.convert_audio_to_text_and_summarize),
 ]
