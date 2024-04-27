@@ -165,32 +165,43 @@ def upload_audio(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def audio_to_text(request, pk):
+def convert_audio_to_text_and_summarize(request, pk):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     if Audio.objects.filter(pk=pk).exists():
         instance = Audio.objects.get(pk=pk)
         audio_file = instance.audio_file
-
         audio_response = FileResponse(audio_file, content_type='audio/mpeg')
         audio_response['Content-Disposition'] = f'attachment; filename="{
             audio_file.name}"'
 
         async def get_text():
             return await audioToText(audio_file.path)
-        text = loop.run_until_complete(get_text())
+        raw_text = loop.run_until_complete(get_text())
+
+        print("WHISPER TEXT", raw_text)
+
+        async def get_summary():
+            return await summarize(raw_text)
+        summarized_text = loop.run_until_complete(get_summary())
+        print("SUMMARY TEXT", summarized_text)
+
         response_data = {
             'status_code': 6000,
             'message': 'Audio converted to text',
-            'data': text,
+            'data': {
+                'raw_text': raw_text,
+                's_text': summarized_text
+            },
         }
         return Response(response_data)
-    response_data = {
-        'status_code': 6001,
-        'message': 'Audio not found',
-    }
-    return JsonResponse(response_data)
+    else:
+        response_data = {
+            'status_code': 6001,
+            'message': 'Audio not found',
+        }
+        return JsonResponse(response_data)
 
 
 async def audioToText(audio_file):
@@ -201,21 +212,18 @@ async def audioToText(audio_file):
     model = whisper.load_model("base")
 
     print("AUdio TEXT 2", audio_file)
-    r_text = model.transcribe(audio_file, language="tibetan")
-    s_text = await summarize(r_text)
+    raw_text = model.transcribe(audio_file, language="tibetan")
     print("AUdio TEXT 3")
-    return {
-        "r_text": r_text["text"],
-        "s_text": s_text
-    }
+
+    return raw_text["text"]
 
 
-async def summarize(text):
-    await asyncio.sleep(5)
+async def summarize(raw_text):
+    # await asyncio.sleep(5)
     model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content("Summarize this text" + text["text"])
+    summarized_text = model.generate_content("Summarize this text" + raw_text)
 
-    return response
+    return summarized_text.text
 
 
 r_text01 = " Thank you, Mr. Secretary General. Your excellencies, ladies and gentlemen, and distinguished guests. I'm honored to be here today. I stand before you, not as an expert, but as a concerned citizen. One of the 400,000 people who marched in the streets of New York on Sunday and the billions of others around the world who want to solve our climate crisis. As an actor, I pretend for a living. I play fictitious characters, often solving fictitious problems. I believe that mankind has looked at climate change in that same way, as if it were a fiction. As if pretending that climate change wasn't real would somehow make it go away. But I think we all know better than that now. Every week we're seeing new and undeniable climate events, evidence that accelerated climate change is here right now. Droughts are intensifying. Our oceans are acidifying with methane plumes rising up from the ocean floor. We are seeing extreme weather events and the West Antarctic and Greenland ice sheets melting at unprecedented rates decades ahead of scientific projections. None of this is rhetoric and none of it is hysteria. It is fact. The scientific community knows it, industry knows it, governments know it, even the United States military knows it. The Chief of the US Navy's Pacific Command Admiral Samuel Lockley recently said that climate change is our single greatest security threat. My friends, this body, perhaps more than any other gathering in human history now faces this difficult but achievable task. You can make history or you will be vilified by it. To be clear, this is not about just telling people to change their light bulbs or to buy a hybrid car. This disaster has grown beyond the choices that individuals make. This is now about our industries and our governments around the world taking decisive large-scale action. Now must be our moment for action. We need to put a price tag on carbon emissions and eliminate government subsidies for oil, coal and gas companies. We need to end the free ride that industrial polluters have been given in the name of a free market economy. They do not deserve our tax dollars. They deserve our scrutiny for the economy itself will die if our ecosystems collapse. The good news is that renewable energy is not only achievable but good economic policy. This is not a partisan debate. It is a human one. Clean air and a livable climate are analiable human rights. And solving this crisis is not a question of politics. It is a question of our own survival. This is the most urgent of times and the most urgent of messages. Honour delegates, leaders of the world, I pretend for a living but you do not. The people made their voices heard on Sunday around the world and the momentum will not stop. But now it is your turn. The time to answer humankind's greatest challenge is now. We beg of you to face it with courage and honesty. Thank you."
