@@ -168,7 +168,7 @@ def convert_audio_to_text_and_summarize(request, pk):
         response_data = {
             'status_code': 6000,
             'message': 'Audio converted to text',
-            'data': NoteSerializer(note).data,
+            'data': NoteSerializer(note, context=context).data,
         }
         return Response(response_data)
     else:
