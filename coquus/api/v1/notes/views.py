@@ -7,9 +7,12 @@ from notes.models import Note, Audio
 import whisper
 import ssl
 import google.generativeai as genai
+from django.http import JsonResponse, FileResponse
 from django.conf import settings
 from dotenv import load_dotenv
+import asyncio
 import numpy as np
+import librosa
 load_dotenv()
 
 # ESP FILE PATH : coquus_audio_files/
@@ -127,59 +130,28 @@ def upload_audio(request):
         #     'data': serializer.data,
         # }
 
-        uploaded_audio_file = serializer.instance.audio_file
-        raw_text = ""
+        audio = serializer.instance.audio_file
+        # raw_text = audioToText(audio_file):
+        print()
+
         summarized_text = ""
-        print(uploaded_audio_file)
-        if 'voice/01' in str(uploaded_audio_file):
-            raw_text = r_text01
-            summarized_text = s_text01
-        elif 'voice/02' in str(uploaded_audio_file):
-            raw_text = r_text02
-            summarized_text = s_text02
-        elif 'voice/03' in str(uploaded_audio_file):
-            raw_text = r_text02
-            summarized_text = s_text02
-        elif 'voice/04' in str(uploaded_audio_file):
-            raw_text = r_text04
-            summarized_text = s_text04
-        else:
-            summarized_text = ''
 
         # note_data = {
         #     'text': raw_text,
         #     'summary': summarized_text,
         #     'audio': serializer.instance
         # }
-        note = Note.objects.create(
-            text=raw_text,
-            summary=summarized_text,
-            audio=serializer.instance
-        )
+        # note = Note.objects.create(
+        #     text=raw_text,
+        #     summary=summarized_text,
+        #     audio=serializer.instance
+        # )
 
         response_data = {
             'status_code': 6000,
             'message': 'Audio uploaded successfully, note created',
-            'data': NoteSerializer(note).data,
-        }
-        return Response(response_data)
-
-        # note_serializer = NoteSerializer(data=note_data)
-
-        # if note_serializer.is_valid():
-        #     note_serializer.save()
-        #     response_data = {
-        #         'status_code': 6000,
-        #         'message': 'Audio uploaded successfully, note created',
-        #         'data': note_serializer.data,
-        #     }
-        #     return Response(response_data)
-
-        response_data = {
-            'status_code': 6000,
-            'message': 'Audio uploaded successfully',
-            'data': serializer.data,
-            # 'data': summarized_text,
+            # 'data': NoteSerializer(note).data,
+            'data': 'Audio converted'
         }
         return Response(response_data)
 
@@ -191,19 +163,57 @@ def upload_audio(request):
     return Response(response_data)
 
 
-def audioToText(audio_file):
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def audio_to_text(request, pk):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    if Audio.objects.filter(pk=pk).exists():
+        instance = Audio.objects.get(pk=pk)
+        audio_file = instance.audio_file
+
+        audio_response = FileResponse(audio_file, content_type='audio/mpeg')
+        audio_response['Content-Disposition'] = f'attachment; filename="{
+            audio_file.name}"'
+
+        async def get_text():
+            return await audioToText(audio_file.path)
+        text = loop.run_until_complete(get_text())
+        response_data = {
+            'status_code': 6000,
+            'message': 'Audio converted to text',
+            'data': text,
+        }
+        return Response(response_data)
+    response_data = {
+        'status_code': 6001,
+        'message': 'Audio not found',
+    }
+    return JsonResponse(response_data)
+
+
+async def audioToText(audio_file):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    # await asyncio.sleep(2)
     print("AUdio TEXT 1", type(audio_file))
     model = whisper.load_model("base")
 
-    print("AUdio TEXT 2", "http://127.0.0.1:8000/" + audio_file)
-    text = model.transcribe(audio_file)
+    print("AUdio TEXT 2", audio_file)
+    r_text = model.transcribe(audio_file, language="tibetan")
+    s_text = await summarize(r_text)
     print("AUdio TEXT 3")
-    return text["text"]
+    return {
+        "r_text": r_text["text"],
+        "s_text": s_text
+    }
 
 
-def summarize(text):
+async def summarize(text):
+    await asyncio.sleep(5)
     model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content("Summarize this text" + text)
+    response = model.generate_content("Summarize this text" + text["text"])
 
     return response
 
