@@ -27,7 +27,7 @@ To get a local copy up and running, follow these steps.
    source venv/bin/activate   # On Windows: venv\Scripts\activate
    cd coquus
    pip install -r requirements.txt
-   python manage.py runserver```
+   python manage.py runserver
 
 ## API Endpoints
 ```markdown
@@ -36,5 +36,5 @@ GET  convert-audio-to-text-and-summarize/audio-id
 GET  get-all-notes/
 GET  get-single-note/note-id/
 GET  get-all-voices/
-GET  get-single-voice/audio-id```
+GET  get-single-voice/audio-id
 
