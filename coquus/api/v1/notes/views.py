@@ -134,6 +134,7 @@ def upload_audio(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def convert_audio_to_text_and_summarize(request, pk):
+    print(GOOGLE_API_KEY)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     context = {
@@ -195,7 +196,8 @@ async def audioToText(audio_file):
 
 # summarize text(Gemini ai)
 async def summarize(raw_text):
-    model = genai.GenerativeModel('gemini-pro')
+    
+    model = genai.GenerativeModel('gemini-1.5-flash')
     summarized_text = model.generate_content("Summarize this text" + raw_text)
 
     return summarized_text.text
